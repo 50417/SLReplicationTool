@@ -116,23 +116,11 @@ To get correlation values of SLC_20R that includes all models.
 FILE_ID IN (5,7,15,22,32,38,41,58,65,66,79,87,95,102,105,106,118,123,125,126,133,156,182,187,189,2,9,10,11,13,14,57,60,63,71,78,97,103,113,114,119,127,141,143,152,155,157,162,163,164,167,169,177,180,181,184,191,192,193)'
 
 
-## Model Evolution Study
-- Open MATLAB (We use MATLAB R2020b).
-- Go to root of project folder. 
-- Follow the Compare Model Snapshot section in the README file 
-- Update the database location (variable ``db``) in compareModelSnapshot.m file
-- Create an model_metric object
-- In command window, 
-```sh
-$ model_evol_obj = compareModelSnapshot(<PATH TO Model Comparison Utility>, 'https://github.com/PowerSystemsHIL/EPHCC') ;
-$ model_evol_obj.replicate_plots_and_results();
-```
-	
+
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
    [A Curated Corpus of Simulink Models from Model-Based Empirical Studies]: <https://ieeexplore.ieee.org/document/8445079>
    [Characteristics, potentials, and limitations of open-source Simulink projects for empirical research]: <https://link.springer.com/article/10.1007/s10270-021-00883-0>
    [SLNET: A Redistributable Corpus of 3rd-party Simulink Models]: <https://dl.acm.org/doi/abs/10.1145/3524842.3528001>
-   [Repository Mining for Changes in Simulink Models]: <https://ieeexplore.ieee.org/document/9592466>
    [Simulink Installation]: <https://github.com/Anonymous-double-blind/SimReplicationTool/wiki/Simulink-Model-Version>
    [SLNET]: <https://zenodo.org/record/4898432#.Y-utZ9LMIYs>
    [Data Analysis]: <https://github.com/Anonymous-double-blind/SimReplicationTool/tree/main/analyze_data>
