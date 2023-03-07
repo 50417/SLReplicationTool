@@ -1,16 +1,23 @@
 classdef model_metric_cfg < handle
     properties(Constant)
-    %GitHub and MATLAB Central choose one 
-        project_source = 'GitHub';
+    % choose one 
+        %project_source = 'Tutorial';
+        %project_source = 'GitHub';
         %project_source = 'MATC';
+        %project_source = 'Others';
+        %project_source = 'All';
+        project_source = 'sourceforge';
     end
     properties
         % How to use properties : https://www.mathworks.com/help/matlab/matlab_oop/how-to-use-properties.html
-        % NOTE : Constant properties val cant be obtained using get methods  
+        % NOTE : Constant properties val cant be obtained using get methods 
+        
+       %Extract Code Gen related metrics: Default is false 
+       CODE_GEN = false;
         
         %  Simulink models Zip files  directory to be analyzed
        %directory where the Simulink projects(in zip format) are stored 
-       source_dir = []
+       source_dir = ''
 
 
        %directory where the sqlite database which contains metadata tables

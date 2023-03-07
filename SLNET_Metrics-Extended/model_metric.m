@@ -41,13 +41,19 @@ classdef model_metric < handle
             warning on verbose
             obj.cfg = model_metric_cfg();
             obj.WriteLog("open");
+            if obj.cfg.CODE_GEN
+                obj.table_name = [obj.cfg.project_source '_Code_Gen'];
+                obj.connect_code_gen_table();
             
-            obj.table_name = obj.cfg.table_name;
-            obj.foreign_table_name = obj.cfg.foreign_table_name;
+            else
+                obj.table_name = obj.cfg.table_name;
+                obj.foreign_table_name = obj.cfg.foreign_table_name;
+
+                obj.blk_info = get_block_info(); % extracts block info of top lvl... 
+                obj.lvl_info = obtain_non_supported_hierarchial_metrics();
+                obj.connect_table();
             
-            obj.blk_info = get_block_info(); % extracts block info of top lvl... 
-            obj.lvl_info = obtain_non_supported_hierarchial_metrics();
-            
+            end
             %Creates folder to extract zipped filed files in current
             %directory.
             if obj.cfg.tmp_unzipped_dir==""
@@ -56,7 +62,7 @@ classdef model_metric < handle
             if(~exist(obj.cfg.tmp_unzipped_dir,'dir'))
                     mkdir(char(obj.cfg.tmp_unzipped_dir));
             end
-            obj.connect_table();
+            
            
         end
         %Gets simulation time of the model based on the models
@@ -116,6 +122,27 @@ classdef model_metric < handle
         %concatenates file with source directory
         function full_path = get_full_path(obj,file)
             full_path = [obj.cfg.source_dir filesep file];
+        end
+        
+        %Table for code generation metrics
+        function connect_code_gen_table(obj)
+            if isfile(obj.cfg.dbfile)
+                obj.conn = sqlite(obj.cfg.dbfile,'connect');
+            else
+                obj.conn = sqlite(obj.cfg.dbfile,'create');
+            end
+            create_code_gen_table = strcat("CREATE  TABLE IF NOT EXISTS ",obj.table_name," ( ID INTEGER primary key autoincrement ,",...
+                "FILE_ID INTEGER,Model_Name VARCHAR,file_path VARCHAR,created_date DATETIME,last_modified DATETIME,",...
+                "EmbeddedCoder_SLNET Boolean,EmbeddedCoder Boolean,TargetLink Boolean, System_Target_File VARCHAR, Solver_Type VARCHAR, ",...
+                "CONSTRAINT UPair  UNIQUE(FILE_ID, Model_Name,file_path) )");
+            
+            if obj.cfg.DROP_TABLES
+                obj.WriteLog(sprintf("Dropping %s",obj.table_name))
+                obj.drop_table();
+                obj.WriteLog(sprintf("Dropped %s",obj.table_name))
+            end
+             obj.WriteLog(create_code_gen_table);
+            exec(obj.conn,char(create_code_gen_table));
         end
         
         %creates Table to store model metrics 
@@ -339,9 +366,10 @@ classdef model_metric < handle
             list_of_zip_files(tf) = [];  %remove current and parent directory.
             
             %Fetch All File id and model_name from Database to remove redundancy
-                    
-            file_id_mdl_array = obj.get_database_content(); 
-            
+                
+             file_id_mdl_array = obj.get_database_content(); 
+    
+               
            processed_file_count = 1;
            %Loop over each Zip File 
            for cnt = 1 : size(list_of_zip_files)
@@ -372,16 +400,18 @@ classdef model_metric < handle
                    %checked
                    %id==51243 Changes directory while analyzing. 
                    %id == 51705 % Requires user input: Enter morse code. 
-                   if ispc
-                        if (id==70131 || id==51243 || id ==24437619 || id==198236388 || id == 124448612 ) % potential crashes or hangs
-                            continue
-                        end
-                   end
-                   if (id==44836 | id==63223) % models in these project hangs while calculating cyclomatic complexity. Babysit
-                       continue
-                   end
-                   if (id==51705 |  id==51243) %  % Requires user input: Enter morse code. 51234 chnges directory after analysis.. Need to babysit
-                            continue
+                   if ~obj.cfg.CODE_GEN    
+                       if ispc
+                            if (id==70131 || id==51243 || id ==24437619 || id==198236388 || id == 124448612 ) % potential crashes or hangs
+                                continue
+                            end
+                       end
+                       if (id==44836 | id==63223) % models in these project hangs while calculating cyclomatic complexity. Babysit
+                           continue
+                       end
+                       if (id==51705 |  id==51243) %  % Requires user input: Enter morse code. 51234 chnges directory after analysis.. Need to babysit
+                                continue
+                       end
                    end
          
                    %unzip the file TODO: Try CATCH
@@ -450,28 +480,30 @@ classdef model_metric < handle
                                 continue;
                                %rmpath(genpath(folder_path));
                            end
-                           if ~obj.cfg.PROCESS_LIBRARY
-                               isLib = bdIsLibrary(model_name);% Generally Library are precompiled:  https://www.mathworks.com/help/simulink/ug/creating-block-libraries.html
-                               if isLib
-                                   obj.WriteLog(sprintf('%s is a library. Skipping calculating cyclomatic metric/compile check',model_name));
-                                   obj.close_the_model(model_name);
-                                   try
-                                   obj.write_to_database(id,char(m(end)),file_path,-1,1,-1,-1,-1,-1,-1,-1,-1,...
-                                       -1,-1,-1,-1,-1,-1 ...
-                                   ,-1,-1,-1,'N/A','N/A','N/A'...
-                                            ,-1,-1,-1,-1,-1 ...
-                                            ,'N/A','N/A',-1);%blk_cnt);
-                                   catch ME
-                                       obj.WriteLog(sprintf('ERROR Inserting to Database %s',model_name));                    
-                                        obj.WriteLog(['ERROR ID : ' ME.identifier]);
-                                     obj.WriteLog(['ERROR MSG : ' ME.message]);
+                           
+                           if ~obj.cfg.CODE_GEN    
+                               if ~obj.cfg.PROCESS_LIBRARY
+                                   isLib = bdIsLibrary(model_name);% Generally Library are precompiled:  https://www.mathworks.com/help/simulink/ug/creating-block-libraries.html
+                                   if isLib
+                                       obj.WriteLog(sprintf('%s is a library. Skipping calculating cyclomatic metric/compile check',model_name));
+                                       obj.close_the_model(model_name);
+                                       try
+                                       obj.write_to_database(id,char(m(end)),file_path,-1,1,-1,-1,-1,-1,-1,-1,-1,...
+                                           -1,-1,-1,-1,-1,-1 ...
+                                       ,-1,-1,-1,'N/A','N/A','N/A'...
+                                                ,-1,-1,-1,-1,-1 ...
+                                                ,'N/A','N/A',-1);%blk_cnt);
+                                       catch ME
+                                           obj.WriteLog(sprintf('ERROR Inserting to Database %s',model_name));                    
+                                            obj.WriteLog(['ERROR ID : ' ME.identifier]);
+                                         obj.WriteLog(['ERROR MSG : ' ME.message]);
+                                       end
+                                       continue
                                    end
-                                   continue
                                end
-                           end
                            
                            
-                            try
+                             try
                                 
                                    %sLDIAGNOSTIC BLOCK COUNT .. BASED ON https://blogs.mathworks.com/simulink/2009/08/11/how-many-blocks-are-in-that-model/
                                obj.WriteLog(['Calculating Number of blocks (BASED ON sLDIAGNOSTIC TOOL) of ' model_name]);
@@ -510,15 +542,15 @@ classdef model_metric < handle
                                 obj.WriteLog(['ERROR MSG : ' ME.message]);
                                 continue;
                                %rmpath(genpath(folder_path));
-                            end
+                             end
                              
-                          isTest = -1;
+                             isTest = -1;
 
-                           if ~isempty(sltest.harness.find(model_name,'SearchDepth',depth))
-                               test_harness = [test_harness,sltest.harness.find(model_name,'SearchDepth',depth)];
-                                obj.WriteLog(sprintf('File Id %d : model : %s has %d test harness',...
-                                    id, char(m(end))  ,length(sltest.harness.find(model_name,'SearchDepth',depth))));
-                            end
+                               if ~isempty(sltest.harness.find(model_name,'SearchDepth',depth))
+                                   test_harness = [test_harness,sltest.harness.find(model_name,'SearchDepth',depth)];
+                                    obj.WriteLog(sprintf('File Id %d : model : %s has %d test harness',...
+                                        id, char(m(end))  ,length(sltest.harness.find(model_name,'SearchDepth',depth))));
+                                end
                            
                            if obj.cfg.PROCESS_LIBRARY
                                isLib = bdIsLibrary(model_name);% Generally Library are precompiled:  https://www.mathworks.com/help/simulink/ug/creating-block-libraries.html
@@ -679,6 +711,32 @@ classdef model_metric < handle
                                    obj.WriteLog(sprintf("Successful Insert to Database"));
                                    success = 0;
                                end
+                           else
+                               % Extracting code gen related metrics
+                               dates = getDates(model_name);
+                               target_link = getTargetLinkInfo(model_name);
+                               embeddedC = getEmbeddedCoderInfo(model_name);
+                               solverType = get_solver_type(model_name);
+                               sysTarget = get_param(model_name,'SystemTargetFile');
+                               
+                               cols = {'FILE_ID','Model_Name','file_path','created_date','last_modified','EmbeddedCoder_SLNET','EmbeddedCoder','TargetLink','System_Target_File','Solver_Type'};
+                               results = {id,    char(m(end)),  file_path, dates{1},     dates{2},             0    , embeddedC, target_link, sysTarget, solverType};
+                                
+                               obj.WriteLog(sprintf("Created : %s LastModified : %s target link : %s  solverType: %s",...
+                                   dates{1},dates{2},target_link,solverType));
+                               
+                               try
+                                insert(obj.conn,obj.table_name,cols,results);
+                                 catch ME
+                                    obj.WriteLog(sprintf('ERROR Inserting to Database %s',model_name));                    
+                                    obj.WriteLog(['ERROR ID : ' ME.identifier]);
+                                    obj.WriteLog(['ERROR MSG : ' ME.message]);
+                               end
+                                
+                               
+                           end
+                           
+                           
                            obj.close_the_model(model_name);
                        end
                   end
@@ -694,7 +752,9 @@ classdef model_metric < handle
                                 
                 end
                                 disp(' ')
-                obj.update_test_flag(test_harness,id);            
+                if ~obj.cfg.CODE_GEN           
+                    obj.update_test_flag(test_harness,id);    
+                end
                 processed_file_count=processed_file_count+1;
 
            end
