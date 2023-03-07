@@ -73,7 +73,7 @@ SLC_R = sqlite extracted using R2017A
 ````
 	> python get_SLNET_plot.py
 ````
-## Insight on SLNET Project evolution and Code generating SLNET models
+## Insight on SLNET Project evolution and Code generating models
 - Navigate to [Data Analysis]
 - Set up python environment based on README fie
 - Update SLNET_analysis_data database location downloaded from [FigShare] in analyzeProjects.py
@@ -81,12 +81,16 @@ SLC_R = sqlite extracted using R2017A
 	> python analyzeProjects.py
 ````
 
-Tp get the plots for SLNET project and model lifecycle 
+To get the plots for SLNET project and model lifecycle 
 - Update SLNET_analysis_data database location downloaded from [FigShare] in analyze_lifecycle.py
 ````
 	> python analyze_lifecycle.py
 ````
 
+To get projects with the code generating models. Update the 2020b database for all corpus on get_codegen.py file
+````
+	> python get_codegen.py
+````
 ## Correlation Analysis
 
 - Open MATLAB (We use MATLAB R2020b).[MATLAB Installation]
