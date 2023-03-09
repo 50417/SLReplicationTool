@@ -1,5 +1,7 @@
 import logging
 import sqlite3
+import pandas as pd
+
 from sqlite3 import Error
 
 def get_all_vals_from_table(conn,sql):
@@ -9,6 +11,15 @@ def get_all_vals_from_table(conn,sql):
     results = [r[0] for r in rows]
 
     return results[0]
+
+def convert_df_to_str(df):
+	res =""
+	for name in df:
+		if(not pd.isna(name)):
+
+			res+='"'+name[:-1]+'"'+','
+	res = res[:-1]
+	return res
 
 def get_project_ids_from_table(conn,sql):
     cur = conn.cursor()
@@ -97,6 +108,15 @@ def main():
         print(row_title[i]+" & "+str(no_of_projects)+" & "+get_code_generating_models_project(conn,table,where_cond)+"\\\\")
     print("=================================================")
 
+
+    df = pd.read_csv('slcorpus-0.csv')
+
+    mdl_names = convert_df_to_str(df["Tutorial"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Simple"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Advanced"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Others"])
+
+    extra_where_cond = " and substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ")"
     slc_r_2020b_database = ""
     tables = ['Tutorial','GitHub','MATC','Sourceforge','Others']
     # create a database connection
@@ -105,7 +125,7 @@ def main():
     for table in tables:
         total_project_id_sql = "Select count(distinct FILE_ID) from "+table+"_models"
         total_project_id = get_all_vals_from_table(conn,total_project_id_sql)
-        print(table+" & "+str(total_project_id)+" & "+get_code_generating_models_project(conn,table)+"\\\\")
+        print(table+" & "+str(total_project_id)+" & "+get_code_generating_models_project(conn,table,extra_where_cond)+"\\\\")
     print("=================================================")
 
 
