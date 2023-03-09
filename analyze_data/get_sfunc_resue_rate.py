@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+import pandas as pd
 from sqlite3 import Error
 from statistics import variance, stdev
 
@@ -69,11 +70,23 @@ def calculate_quartiles(list_of_vals):
     
     return [round(list_of_vals[0],2),round(lower_quartile,2),round(median,2),round(upper_quartile,2),round(list_of_vals[n-1],2),round(mean,2)]
 
+def convert_df_to_str(df):
+	res =""
+	for name in df:
+		if(not pd.isna(name)):
 
-def get_s_function_reuse_rate(conn,table):
+			res+='"'+name[:-1]+'"'+','
+	res = res[:-1]
+	return res
+
+def get_s_function_reuse_rate(conn,table, where_cond = None):
     s_functions_sql = "Select sfun_nam_count from "+table+"_models where sfun_nam_count not in ('','N/A')"
-    s_functions = get_all_vals_from_table(conn,s_functions_sql)
+   
 
+    if where_cond is not None: 
+        s_functions_sql += where_cond
+    s_functions = get_all_vals_from_table(conn,s_functions_sql)
+   
     s_func_reuse_rate = []
     for s_function in s_functions:
         result = calculate_reuse_rate(s_function)
@@ -85,14 +98,23 @@ def get_s_function_reuse_rate(conn,table):
 def main():
 
     print("Min  Lower-Quartile median upper_quartile max Avg")
+    
+    df = pd.read_csv('slcorpus-0.csv')
 
+    mdl_names = convert_df_to_str(df["Tutorial"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Simple"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Advanced"])
+    mdl_names =mdl_names + ","+convert_df_to_str(df["Others"])
+
+    extra_where_cond = "and substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ")"
+    
     slc_r_2017a_database = ""
     tables = ['Tutorial','GitHub','MATC','Sourceforge','Others']
     # create a database connection
     conn = create_connection(slc_r_2017a_database)
     all_reuse_rates = []
     for table in tables:
-        all_reuse_rates.extend(get_s_function_reuse_rate(conn,table))
+        all_reuse_rates.extend(get_s_function_reuse_rate(conn,table,extra_where_cond))
     ans = calculate_quartiles(all_reuse_rates)
     print(ans)
     print("&".join(map(str,ans)))
@@ -104,7 +126,7 @@ def main():
     conn = create_connection(slc_r_2020b_database)
     all_reuse_rates = []
     for table in tables:
-        all_reuse_rates.extend(get_s_function_reuse_rate(conn,table))
+        all_reuse_rates.extend(get_s_function_reuse_rate(conn,table,extra_where_cond))
     ans = calculate_quartiles(all_reuse_rates)
     print(ans)
     print("&".join(map(str,ans)))
