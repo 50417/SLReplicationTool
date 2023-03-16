@@ -90,7 +90,7 @@ def get_no_of_blk_in_subsys_quartile_per_project(conn,sources,where_cond=None):
 
 
 
-def get_distinct_blk_type_quartile_per_model(conn,sources,where_cond=None):
+def get_no_of_blk_in_subsys_quartile_per_model(conn,sources,where_cond=None):
 	res_list = []
 	for source in sources:
 		if where_cond is not None:
@@ -106,7 +106,23 @@ def get_distinct_blk_type_quartile_per_model(conn,sources,where_cond=None):
 	quart_list = calculate_quartiles(res_list)
 	return quart_list
 
-def get_no_of_blk_in_subsys_quartile_per_model(conn,sources,where_cond=None):
+def get_no_of_blk_in_subsys_of_all_models(conn,sources,depth, where_cond=None):
+	res_list = []
+	for source in sources:
+		if where_cond is not None:
+			sql = "select file_id,file_path,block_count from "+source+"_Subsys where depth = "+ str(depth) +" and "+where_cond
+		else: 
+			sql = "select file_id,file_path, block_count from "+source+"_Subsys where depth = "+str(depth)
+
+		cur = conn.cursor()
+		cur.execute(sql)
+
+		rows = cur.fetchall()
+		res_list.extend([r[2] for r in rows])
+	quart_list = calculate_quartiles(res_list)
+	return quart_list
+
+def get_distinct_blk_type_quartile_per_model(conn,sources,where_cond=None):
 	res_list = []
 	for source in sources:
 		if where_cond is not None:
@@ -208,6 +224,7 @@ def format_num_for_print(num):
 	return "{:,.1f}".format(num)
 
 def main():
+	DEPTH = 7
 	# Update with SLnet database aka slnet_2020R.sqlite
 	slnet_db = ""
 	slnet_conn = create_connection(slnet_db)
@@ -217,9 +234,14 @@ def main():
 	slnet_per_project["blk_type"] = get_distinct_blk_type_quartile_per_project(slnet_conn,slnet_sources)
 	slnet_per_project["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_project(slnet_conn,slnet_sources)
 
+	slnet_per_project['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slnet_conn,slnet_sources,DEPTH)
+	
+	
 	slnet_per_model = get_per_model_quartiles(slnet_sources,slnet_conn)
 	slnet_per_model["blk_type"] =  get_distinct_blk_type_quartile_per_model(slnet_conn,slnet_sources)
 	slnet_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slnet_conn,slnet_sources)
+	
+	slnet_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slnet_conn,slnet_sources,DEPTH)
 	
 
 	# Update with Boll's database aka 
@@ -231,10 +253,14 @@ def main():
 	slc_boll_per_project["blk_type"] = get_distinct_blk_type_quartile_per_project(slc_boll_conn,slc_boll_sources)
 	slc_boll_per_project["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_project(slc_boll_conn,slc_boll_sources)
 	
+	slc_boll_per_project['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_boll_conn,slc_boll_sources,DEPTH)
+	
 	slc_boll_per_model = get_per_model_quartiles(slc_boll_sources,slc_boll_conn)
 	slc_boll_per_model["blk_type"] = get_distinct_blk_type_quartile_per_model(slc_boll_conn,slc_boll_sources)
 	slc_boll_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slc_boll_conn,slc_boll_sources)
 
+	slc_boll_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_boll_conn,slc_boll_sources,DEPTH)
+	
 	#Update with reprodcing slc's database  
 	slc_r_db = ""
 	slc_r_conn = create_connection(slc_r_db)
@@ -251,9 +277,14 @@ def main():
 	slc_r_per_project["blk_type"]  = get_distinct_blk_type_quartile_per_project(slc_r_conn,slc_r_sources,extra_where_cond)
 	slc_r_per_project["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_project(slc_r_conn,slc_r_sources,extra_where_cond)
 
+	slc_r_per_project['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_r_conn,slc_r_sources,DEPTH,extra_where_cond)
+
 	slc_r_per_model = get_per_model_quartiles(slc_r_sources,slc_r_conn,extra_where_cond) 
 	slc_r_per_model["blk_type"]  = get_distinct_blk_type_quartile_per_model(slc_r_conn,slc_r_sources,extra_where_cond)
 	slc_r_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slc_r_conn,slc_r_sources,extra_where_cond)
+
+	slc_r_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_r_conn,slc_r_sources,DEPTH,extra_where_cond)
+	
 
 	print(slnet_per_project)
 	print(slc_boll_per_project)
@@ -263,7 +294,7 @@ def main():
 	print(slc_boll_per_model)
 	print(slc_r_per_model)
 
-	cols = ["*","SCHK_Block_count","blk_type","total_ConnH_cnt","Agg_SubSystem_count","CComplexity","unique_mdl_ref_count","Alge_loop_Cnt","LibraryLinked_count","blk_subsys"]
+	cols = ["*","SCHK_Block_count","blk_type","total_ConnH_cnt","Agg_SubSystem_count","CComplexity","unique_mdl_ref_count","Alge_loop_Cnt","LibraryLinked_count","blk_subsys_all"]
 	col_header = ["Model","Block","Block type","Signal line","Subsystem","CC","Mdl Ref","Algebraic L.","Lib-Linked Block","Subsys Block"]
 	for col_idx in range(len(cols)):
 		col = cols[col_idx]
