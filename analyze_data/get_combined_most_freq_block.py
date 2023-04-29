@@ -182,6 +182,7 @@ def plot_combined_blk_type(x,y1,y2,xlabel=None, ylabel=None,figurename = None,xt
 
 def main():
     slnet_database = ""
+    # SC R database
     slc2_database = ""
 
     slnet_conn = create_connection(slnet_database)
