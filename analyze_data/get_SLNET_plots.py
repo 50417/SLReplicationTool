@@ -246,11 +246,27 @@ def get_average_lines_per_block(conn,mat_linesperblock,git_linesperblock):
 
     return average_lines_per_block
 
+def get_block_lt_X(conn,matc_lt_12_blk,git_lt_12_blk,X):
+    cur = conn.cursor()
+    g_results = 0
+    cur.execute(git_lt_12_blk)
+    rows = cur.fetchall()
+
+    g_results = rows[0][0]
+
+    cur.execute(matc_lt_12_blk)
+    rows = cur.fetchall()
+    m_results = rows[0][0]
+
+    res = g_results + m_results
+    return res
+
+
 
 def get_general_metrics(conn):
 
     total_projects = 2837
-    total_models = 7890#9117
+    total_models = 7876#9117
     mat_zero_mdl = "select SCHK_Block_count from matc_models where SCHK_Block_count=0"
     git_zero_mdl = "select SCHK_Block_count from github_models where SCHK_Block_count=0"
     zero_mdl = get_all_vals_from_table(conn,git_zero_mdl,mat_zero_mdl)
@@ -321,6 +337,13 @@ def get_general_metrics(conn):
     print("Average Lines per block:{:.2f}".format(linesperblock))
 
 
+    X = 8
+    git_lt_12_blk = "select count(*)   from github_models where schk_block_count<"+str(X)
+    matc_lt_12_blk ="select count(*)   from matc_models where schk_block_count<"+str(X)
+    block_lt_X = get_block_lt_X(conn,matc_lt_12_blk,git_lt_12_blk,X)
+    print("Block Count less than %d:%5.2f"%(X,block_lt_X/total_models*100))
+
+
 
 
 def main():
@@ -345,7 +368,7 @@ def main():
     project_size_metric = [num_mdl,project_blks,mdl_blks,prj_blk_types,mdl_blk_types,prj_signal_lines,\
     mdl_signal_lines,prj_subsys,mdl_subsys,prj_cyclo,mdl_cyclo]
     #print(prj_blk_types)
-    cols = ["Models\t\t&", "Blocks\t\t& project\t\t& ","Blocks\t\t& model\t\t&"," Block types\t\t& project\t\t&",
+    cols = ["Models(considers library models)\t\t&", "Blocks\t\t& project\t\t& ","Blocks\t\t& model\t\t&"," Block types\t\t& project\t\t&",
      "Block types \t\t& model\t\t&","Signal lines\t\t& project\t\t&", "Signal lines\t\t& model\t\t&",
      "Subsystems\t\t& project\t\t& ", "Subsystems\t\t& model\t\t&","CC\t\t& project\t\t&",
      "CC\t\t& model&\t\t" ]
