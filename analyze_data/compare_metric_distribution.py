@@ -154,6 +154,77 @@ def get_info_per_project(conn,source,col,where_cond = None):
 	rows = cur.fetchall()
 	return [r[1] for r in rows]
 
+
+def get_slx_or_mdl(conn,sources,where_cond = None):
+	file_types = [' and model_name like "%.slx%"',' and model_name like "%.mdl%"']
+	slx_mdl_counts = []
+	for file_type in file_types: 
+		slx_mdl_counts.append(0)
+		for source in sources:
+			if where_cond is not None:
+				sql = "select  count(*) from "+source+"_models where is_lib=0 and is_test=-1"+file_type+" and "+where_cond
+			else:
+				sql = "select count(*) from "+source+"_models where is_lib=0 and is_test=-1"+file_type
+			cur = conn.cursor()
+			cur.execute(sql)
+
+			rows = cur.fetchall()
+			slx_mdl_counts[-1] = slx_mdl_counts[-1] + rows[0][0]
+
+	print("Number of SLX and MDL"+str(slx_mdl_counts))
+	
+	print("SLX % and MDL %  : "+str([x/sum(slx_mdl_counts) for x in slx_mdl_counts]))
+	
+	print("===================MODEL LEVEL SLXMDL END==============")
+
+	proj_slx_mdl = {}
+	counter = 0 
+	for file_type in file_types: 
+		if counter == 0: 
+			f_type = 'slx'
+			counter = 1
+		else: 
+			f_type = 'mdl'
+			counter = 0 
+		for source in sources:
+			if where_cond is not None:
+				sql = "select file_id, count(*) from "+source+"_models where is_lib=0 and is_test=-1"+file_type+" and "+where_cond + " group by file_id"
+			else:
+				sql = "select file_id, count(*) from "+source+"_models where is_lib=0 and is_test=-1"+file_type + " group by file_id"
+			cur = conn.cursor()
+			cur.execute(sql)
+
+			rows = cur.fetchall()
+			for row in rows: 
+				f_id = str(row[0])+source 
+				cnt = row[1]
+				tmp = {f_type:cnt}
+				if f_id not in proj_slx_mdl:
+					proj_slx_mdl[f_id] = []
+				proj_slx_mdl[f_id].append(tmp)
+	all_total = 0 
+	all_only_mdl = 0
+	all_only_slx = 0
+	all_both = 0
+	for key, val in proj_slx_mdl.items():
+		all_total +=1
+		if len(val) ==2:
+			all_both += 1
+		else:
+			if keyHas(val,'slx'):
+				all_only_slx += 1
+			elif keyHas(val,'mdl'):
+				all_only_mdl += 1
+	print("Only MDL : {:,.1f}".format(all_only_mdl/all_total*100))
+	print("Only SLX : {:,.1f}".format(all_only_slx/all_total*100))
+	print("BOTH MDL and SLX : {:,.1f}".format(all_both/all_total*100))
+	print("=================PROJ END====================\n\n")
+	#print(proj_slx_mdl)
+
+def keyHas(lst,subStr):
+	 if subStr in lst[0]:
+	 	return True
+	 return False
 def get_per_projects_quartiles(sources, conn, extra_where_cond = None):
 	cols = ["*","SCHK_Block_count","total_ConnH_cnt","Agg_SubSystem_count","CComplexity","unique_mdl_ref_count","Alge_loop_Cnt","LibraryLinked_count"]
 	where_cond = [None,None,None,None,"CComplexity>-1",None,"Alge_loop_Cnt>-1",None]
@@ -182,6 +253,7 @@ def get_info_per_model(conn,source,col,where_cond = None):
 		sql = "select file_id,file_path, "+col+" from "+source+"_models where is_lib=0 and is_test=-1 and "+where_cond+" group by File_id,file_path"
 	else:
 		sql = "select file_id,file_path, "+col+" from "+source+"_models where is_lib=0 and is_test=-1 group by File_id,file_path"
+	
 	cur = conn.cursor()
 	cur.execute(sql)
 
@@ -235,6 +307,12 @@ def main():
 	slnet_per_project["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_project(slnet_conn,slnet_sources)
 
 	slnet_per_project['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slnet_conn,slnet_sources,DEPTH)
+	#print("===================================================")
+	#for i in range(20):
+	#	try:
+	#		print(get_no_of_blk_in_subsys_of_all_models(slnet_conn,slnet_sources,i))
+	#	except Exception as e: 
+	#		continue
 	
 	
 	slnet_per_model = get_per_model_quartiles(slnet_sources,slnet_conn)
@@ -242,7 +320,8 @@ def main():
 	slnet_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slnet_conn,slnet_sources)
 	
 	slnet_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slnet_conn,slnet_sources,DEPTH)
-	
+	print("SLNET")
+	get_slx_or_mdl(slnet_conn,slnet_sources)
 
 	# Update with Boll's database aka 
 	slc_boll_db = "" 
@@ -254,13 +333,22 @@ def main():
 	slc_boll_per_project["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_project(slc_boll_conn,slc_boll_sources)
 	
 	slc_boll_per_project['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_boll_conn,slc_boll_sources,DEPTH)
+
+	#print("===================================================")
+	#for i in range(20):
+#		try:
+		#	print(get_no_of_blk_in_subsys_of_all_models(slc_boll_conn,slc_boll_sources,i))
+		#except Exception as e: 
+		#	continue
 	
 	slc_boll_per_model = get_per_model_quartiles(slc_boll_sources,slc_boll_conn)
 	slc_boll_per_model["blk_type"] = get_distinct_blk_type_quartile_per_model(slc_boll_conn,slc_boll_sources)
 	slc_boll_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slc_boll_conn,slc_boll_sources)
 
 	slc_boll_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_boll_conn,slc_boll_sources,DEPTH)
-	
+	print("Boll")
+	get_slx_or_mdl(slc_boll_conn,slc_boll_sources)
+
 	#Update with reprodcing slc's database  
 	slc_r_db = ""
 	slc_r_conn = create_connection(slc_r_db)
@@ -284,8 +372,13 @@ def main():
 	slc_r_per_model["blk_subsys"] = get_no_of_blk_in_subsys_quartile_per_model(slc_r_conn,slc_r_sources,extra_where_cond)
 
 	slc_r_per_model['blk_subsys_all'] = get_no_of_blk_in_subsys_of_all_models(slc_r_conn,slc_r_sources,DEPTH,extra_where_cond)
-	
-
+	#print("===================================================")
+	#for i in range(20):
+	#	try:
+	#		print(get_no_of_blk_in_subsys_of_all_models(slc_r_conn,slc_r_sources,i,extra_where_cond))
+	#	except Exception as e: 
+	#		continue
+	'''
 	print(slnet_per_project)
 	print(slc_boll_per_project)
 	print(slc_r_per_project)
@@ -293,7 +386,9 @@ def main():
 	print(slnet_per_model)
 	print(slc_boll_per_model)
 	print(slc_r_per_model)
-
+	'''
+	print("Curated Corpus")
+	get_slx_or_mdl(slc_r_conn,slc_r_sources,extra_where_cond)
 	cols = ["*","SCHK_Block_count","blk_type","total_ConnH_cnt","Agg_SubSystem_count","CComplexity","unique_mdl_ref_count","Alge_loop_Cnt","LibraryLinked_count","blk_subsys_all"]
 	col_header = ["Model","Block","Block type","Signal line","Subsystem","CC","Mdl Ref","Algebraic L.","Lib-Linked Block","Subsys Block"]
 	for col_idx in range(len(cols)):
