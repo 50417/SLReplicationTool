@@ -143,8 +143,8 @@ def get_model_commits_per(conn):
         project_hash_sql = "select hash from Project_commits where id = " + str(id)
         cur.execute(project_hash_sql)
         project_hash_set = convert_rows_to_set(cur.fetchall())
-        if len(model_hash_set) == 0 :
-            print("jere")
+        #if len(model_hash_set) == 0 :
+        #    print("jere")
         model_commits_per.append(len(model_hash_set)/len(project_hash_set)*100)
         #print(model_commits_per)
     return sorted(model_commits_per)
@@ -183,8 +183,8 @@ def get_model_abs_lifetime_meta(conn):
     creat_m = []
     res = []
     for r in rows:
-        print(r[0])
-        print(r[1])
+        #print(r[0])
+        #print(r[1])
         try:
             ans = datetime.strptime(r[0], '%c') -datetime.strptime(r[1], '%c')
         except Exception as e:
@@ -261,38 +261,46 @@ def main():
     conn = create_connection(database)
     print("Project level metrics")
     print("Project Metric & Min. & Max. & Mean& Median & Std. Dev")
-    print(get_commits(conn)[109])
-    print(get_commits(conn)[110])
+    #print(get_commits(conn)[109])
+    #print(get_commits(conn)[110])
     print(len(get_commits(conn)))
     no_of_commits  = calculate_quartiles(get_commits(conn))
-    print("Number of commits &"+ no_of_commits)
-    merge_percent = calculate_quartiles(get_merge_commits_projects(conn))
-    print("Merge commits in %&" + merge_percent)
-    number_of_authors = calculate_quartiles(get_number_of_authors(conn))
-    print("Number of authors&" + number_of_authors)
-    lifetime_in_days = calculate_quartiles(get_lifetime(conn))
-    print("Lifetime in days&" + lifetime_in_days)
+    print("Commits & p &"+ no_of_commits +"\\\\")
     commit_per_day= calculate_quartiles(get_commit_per_day(conn))
-    print("Commit per day&" + commit_per_day)
+    print("Commit / day & p &" + commit_per_day+"\\\\")
     model_commits_per = calculate_quartiles(get_model_commits_per(conn))
-    print("Model commits in %&"+ model_commits_per)
-    model_author_per = calculate_quartiles(get_model_author_per(conn))
-    print("Model authors in %&"+ model_author_per)
+    print("Model commits [\\%] & p &"+ model_commits_per+"\\\\")
+    
+    merge_percent = calculate_quartiles(get_merge_commits_projects(conn))
+    print("Merge commits [\\%] & p & " + merge_percent+"\\\\")
+    
+    model_update = calculate_quartiles(get_model_updates(conn))
+    print("Updates & m &"+model_update+"\\\\")
+    
+    lifetime_in_days = calculate_quartiles(get_lifetime(conn))
+    print("Lifetime [days] & p &" + lifetime_in_days+"\\\\")
+
+    model_lifetime = calculate_quartiles(get_model_abs_lifetime(conn))
+    print("Abs lifetime [days] & m &" + model_lifetime+"\\\\")
+    model_rel_lifetime = calculate_quartiles(get_model_rel_lifetime(conn))
+    print("Relative lifetime [\\%] & m" + model_rel_lifetime+"\\\\")
+
+    number_of_authors = calculate_quartiles(get_number_of_authors(conn))
+    print("Authors & p &" + number_of_authors+"\\\\")
+    
+    
 
     # Model Metrics
-    print("Model level metrics")
-    model_update = calculate_quartiles(get_model_updates(conn))
-    print("Number of updates &"+model_update)
-    model_update = calculate_quartiles(get_model_authors(conn))
-    print("Number of authors &" + model_update)
-    model_lifetime = calculate_quartiles(get_model_abs_lifetime(conn))
-    print("Abs lifetime in days &" + model_lifetime)
-    model_rel_lifetime = calculate_quartiles(get_model_rel_lifetime(conn))
-    print("Relative lifetime in % &" + model_rel_lifetime)
+    #print("Model level metrics")
+    model_author = calculate_quartiles(get_model_authors(conn))
+    print("Authors & m &" + model_author+"\\\\")
+    model_author_per = calculate_quartiles(get_model_author_per(conn))
+    print("Model authors  [\\%] & p &"+ model_author_per+"\\\\")
+    
     get_commits_info(conn)
     
     print('====================')
-    get_code_generating_models_project(conn)
+    #get_code_generating_models_project(conn)
 
 
 
