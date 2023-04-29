@@ -15,7 +15,7 @@ from Model_commits_verbatim import Model_commits_verbatim_Controller
 
 logging.basicConfig(filename='commits.log', filemode='a',
 					format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-					level=logging.INFO)
+					level=logging.ERROR)
 
 #logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
@@ -103,12 +103,6 @@ def main():
             id, url , model_files,hash = id_url
             if not os.path.exists(path):
                 os.mkdir(path)
-            if url == "https://github.com/alesgraz/kinect2-SDK-for-Simulink" \
-                    or url=="https://github.com/OpenCadd/Lego_nxt_car" \
-                    or url=="https://github.com/StefanMack/ProjSensSys" \
-                    or url=="https://github.com/chiloanel/UWMatlab"\
-                    or url == "https://github.com/alesgraz/kinect2-SDK-for-Simulink":
-                continue
             try:
                 if id not in processed_id:
                     clone = "git clone " + url + " " + path
@@ -127,10 +121,6 @@ def main():
                 shutil.rmtree(path)
     end = time.time()
     logging.info("IT took {} seconds".format(end - start))
-
-
-
-
 
 if __name__ == '__main__':
     main()

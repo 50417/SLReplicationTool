@@ -87,7 +87,7 @@ class Model_commits_verbatim_Controller(object):
 	def __init__(self,db_name):
 		# In memory SQlite database . URI : sqlite:///:memory:
 		# URL = driver:///filename or memory
-		self.engine = create_engine('sqlite:///'+db_name, echo=True) # Hard coded Database Name . TODO : Make it user configurable/
+		self.engine = create_engine('sqlite:///'+db_name) # Hard coded Database Name . TODO : Make it user configurable/
 		#Create Tables
 		Base.metadata.create_all(bind=self.engine)
 		self.Session = sessionmaker(bind=self.engine)

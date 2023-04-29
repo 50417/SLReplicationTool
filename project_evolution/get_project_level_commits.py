@@ -4,9 +4,9 @@ import sys
 
 logging.basicConfig(filename='commits.log', filemode='a',
 					format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-					level=logging.INFO)
+					level=logging.ERROR)
 
-#logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 def get_project_level_commits(repo_url,hash,project_verbatim,id):
     hashes_per_project = []
     commits_dates_per_project = []
