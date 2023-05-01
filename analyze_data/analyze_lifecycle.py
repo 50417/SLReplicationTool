@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime
+import sys
 import matplotlib
 import matplotlib.pyplot as plt
 """matplotlib.use("pgf")"""
 matplotlib.rcParams.update({
-	'font.family': 'Times New Roman',
+	'font.family': 'DejaVu Sans',
 	'font.size' : 14,
 
 })
@@ -13,7 +14,7 @@ logging.basicConfig(filename='analyze_projects.log', filemode='a',
 					format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 					level=logging.INFO)
 
-#logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 def date_range(start, end, intv):
 
 	diff = (end  - start ) / intv
@@ -97,6 +98,7 @@ def get_number_of_model_under_development(conn,id):
 def get_project_commit_distribution(conn,id,date_range_buckets):
 	cur = conn.cursor()
 	total_commits = project_total_commits(conn,id)
+
 	rel_commits_distribution = []
 	commit_counts = []
 	logging.info(date_range_buckets)
@@ -117,6 +119,7 @@ def get_project_commit_distribution(conn,id,date_range_buckets):
 	rows = cur.fetchall()
 	count = int(rows[0][0])
 	commit_counts.append(count)
+
 	rel_commits_distribution.append(count / total_commits*100)
 	logging.info("Project ID {} LifeCycle: {}".format(id,rel_commits_distribution) )
 	assert(total_commits == sum(commit_counts))
@@ -126,6 +129,9 @@ def get_project_commit_distribution(conn,id,date_range_buckets):
 def get_model_commit_distribution(conn,id,date_range_buckets):
 	cur = conn.cursor()
 	total_commits = model_total_commits(conn,id)
+	if total_commits == 0:
+		return [] 
+
 	rel_commits_distribution = []
 	commit_counts = []
 	logging.info(date_range_buckets)
@@ -156,7 +162,7 @@ def get_number_of_models_has_start_dates(models_start_end_date,bin_start_date, b
 	for model_s_e_date in models_start_end_date:
 		model_start_date = convert_str_to_date(model_s_e_date[1])
 		model_end_date = convert_str_to_date(model_s_e_date[2])
-		if bin_start_date<=model_start_date<=bin_end_date:
+		if bin_start_date<=model_start_date<bin_end_date:
 			ans += 1
 	return ans
 
@@ -165,6 +171,7 @@ def get_model_modified_commit_distribution(conn,id,date_range_buckets):
 	total_num_of_models = get_number_of_model_under_development(conn, id)
 	total_commits = model_modified_total_commits(conn,id)
 	#total number of modified_model commits
+	# Total number of updates. 
 	total_commits = total_commits - total_num_of_models
 	models_start_end_date = get_model_start_and_end_dates(conn, id)
 
@@ -227,6 +234,7 @@ def get_model_development_distribution(conn,id,date_range_buckets):
 	cur = conn.cursor()
 	total_models = get_number_of_model_under_development(conn,id)
 	models_start_end_date = get_model_start_and_end_dates(conn, id)
+	#print(total_models)
 	model_dev_ratio_distribution = []
 	logging.info(date_range_buckets)
 	for i in range(len(date_range_buckets)-1):
@@ -241,6 +249,11 @@ def get_model_development_distribution(conn,id,date_range_buckets):
 							model_start_date <= bin_start_date and model_end_date >= bin_end_date
 					) or (model_start_date <= bin_end_date and model_end_date >= bin_start_date):
 							model_counts+=1
+		#print("=================")
+		#print(id)
+		#print(model_counts)
+		#print(total_models)
+		#print("=================")
 		model_dev_ratio_distribution.append((model_counts/total_models)*100)
 	bin_start_date = convert_str_to_date(date_range_buckets[len(date_range_buckets)-1])
 	model_counts = 0
@@ -252,6 +265,7 @@ def get_model_development_distribution(conn,id,date_range_buckets):
 						model_counts+=1
 
 	model_dev_ratio_distribution.append(model_counts / total_models*100)
+	#print(model_dev_ratio_distribution)
 	logging.info("Project ID {} Model Ratio: {}".format(id,model_dev_ratio_distribution) )
 	#assert(total_commits == sum(commit_counts))
 	return model_dev_ratio_distribution
@@ -363,6 +377,7 @@ def plot_all(data_lst,xlabel="Project life time", ylabel=None,figurename = None)
 	plt.show()
 
 def main():
+	#database = ""
 	database = ""
 
 	# create a database connection
@@ -377,33 +392,37 @@ def main():
 	for id in project_ids:
 		start_date, end_date = get_start_end_dates(conn,id)
 		date_range_buckets = date_range(start_date, end_date, intv=10)
-		projects_commit_dist.append(get_project_commit_distribution(conn,id,date_range_buckets))
-		model_commit_dist.append(get_model_commit_distribution(conn,id,date_range_buckets))
-		model_modified_commit_dist.append(get_model_modified_commit_distribution(conn,id,date_range_buckets))
-		model_development_dist.append(get_model_development_distribution(conn,id,date_range_buckets))
+		tmp_model_commit_dist_data = get_model_commit_distribution(conn,id,date_range_buckets)
+		if len(tmp_model_commit_dist_data) != 0:
+			model_commit_dist.append(tmp_model_commit_dist_data)
+			projects_commit_dist.append(get_project_commit_distribution(conn,id,date_range_buckets))
+			
+			model_modified_commit_dist.append(get_model_modified_commit_distribution(conn,id,date_range_buckets))
+			model_development_dist.append(get_model_development_distribution(conn,id,date_range_buckets))
 
 	avg_project_commit_dist = get_average_by_col(projects_commit_dist)
-
+	#print(sum(avg_project_commit_dist))
 	logging.info("Average Project Distribution of all projects:{}".format(avg_project_commit_dist))
 	plot(avg_project_commit_dist,ylabel="Project Commits",figurename="Project_commit_dist.pdf")
 
 	avg_model_commit_dist = get_average_by_col(model_commit_dist)
+	#print(sum(avg_model_commit_dist))
 	logging.info("Average Model Distribution of all projects:{}".format(avg_model_commit_dist))
 	plot(avg_model_commit_dist,ylabel="Model Commits",figurename="Model_commit_dist.pdf")
 
 	avg_model_modified_commit_dist = get_average_by_col(model_modified_commit_dist)
 	logging.info("Average Model Modified Distribution of all projects:{}".format(avg_model_modified_commit_dist))
 	plot(avg_model_modified_commit_dist, ylabel = "Committed Model Modifications",figurename="modified_model_commit_dist.pdf")
-
+	logging.info("Percentage of projects with model updates :{}".format(sum(avg_model_modified_commit_dist)))
 	avg_model_development_dist = get_average_by_col(model_development_dist)
 
 	logging.info("Average Model Development Ratio Distribution of all projects:{}".format(avg_model_development_dist))
 	plot(avg_model_development_dist, ylabel="Models under development", figurename="model_under_development.pdf")
 
 	project_lifecycles = {
-		"Project Commits":avg_project_commit_dist,
-		"Model Commits":avg_model_commit_dist,
-		"Committed Model Modifications":avg_model_modified_commit_dist,
+		"Commits":avg_project_commit_dist,
+		"$\mathregular{Commits_{MS}}$":avg_model_commit_dist,
+		"$\mathregular{Updates_{MS}}$":avg_model_modified_commit_dist,
 		"Models under development":avg_model_development_dist
 	}
 
