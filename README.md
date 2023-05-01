@@ -22,7 +22,7 @@ Tested on Ubuntu 18.04
 
 First, create virtual environment using  [Anaconda] so that the installation does not conflict with system wide installs.
 ```sh
-$ conda create -n <envname> python=3.7
+$ conda create -n <envname> python=3.8.16
 ```
 
 Activate environment and Install the dependencies.
