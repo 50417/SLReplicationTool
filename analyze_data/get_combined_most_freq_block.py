@@ -21,19 +21,41 @@ def abbreviate_names(blk_types,name_abbr):
 
 def get_frequentlyusedBlocks_slnet(conn):
     cur = conn.cursor()
+    '''
     sql = "Select b1,c1+c2 num_of_models from " \
       "(select BLK_TYPE b1,count(*)  as c1 from GitHub_Blocks group by BLK_TYPE) " \
       "Join (select BLK_TYPE b2 ,count(*) as c2 from Matc_Blocks group by BLK_TYPE ) " \
       "on b1=b2 " \
       "order by num_of_models desc"
-    cur.execute(sql)
-    rows = cur.fetchall()
-    blk_types = []
-    number_of_model_used_in = []
+    '''
+    blk_types = {}
+    tables = ["Github","MATC"]
+    for table_name in tables:
+        sql = 'select BLK_TYPE b1,count(*)  as c1 from '+table_name+'_Blocks group by BLK_TYPE'
+        cur.execute(sql)
+        rows = cur.fetchall()
+        for i in range(len(rows)):
+            block_type_row =rows[i][0]
+            number_of_models_for_block_type = rows[i][1]
+            if  block_type_row not in blk_types:
+                blk_types[block_type_row] = number_of_models_for_block_type
+            blk_types[block_type_row] += number_of_models_for_block_type
+    print("SLNET BLOCK TYPES : ",len(blk_types.keys()))
+
+    '''
     for i in range(0,60):
         blk_types.append(rows[i][0])
         number_of_model_used_in.append(rows[i][1])
-    return blk_types, number_of_model_used_in
+    '''
+    blk_types_and_mdl_cnt = sorted(blk_types.items(), key = lambda x:x[1], reverse=True)
+    blk_types_lst = []
+    number_of_model_used_in = []
+    for ele in blk_types_and_mdl_cnt:
+        b_type,m_cnt = ele
+        blk_types_lst.append(b_type)
+        number_of_model_used_in.append(m_cnt)
+
+    return blk_types_lst, number_of_model_used_in
 
 def get_all_vals_from_table(conn,gsql , msql):
     cur = conn.cursor()
@@ -104,7 +126,8 @@ def convert_df_to_str(df):
 
 def get_frequentlyusedBlocks_slc2(conn, mdl_names):
     cur = conn.cursor()
-
+    tables = ["github", "matc", "tutorial", "sourceforge", "others"]
+    '''
     sql = "Select b1,c1+c2+c3+c4+c5 num_of_models from" \
           "(select BLK_TYPE b1,count(*)  as c1 from GitHub_Blocks where substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ") group by BLK_TYPE) " \
                                                                                                                                           "Join (select BLK_TYPE b2 ,count(*) as c2 from MATC_Blocks where substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ") group by BLK_TYPE) " \
@@ -119,26 +142,65 @@ def get_frequentlyusedBlocks_slc2(conn, mdl_names):
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "(select BLK_TYPE b5,count(*)  as c5 from sourceForge_Blocks where substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ") group by BLK_TYPE) " \
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "on b1 = b5 " \
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "order by num_of_models desc"
-    #print(sql)
-    cur.execute(sql)
-    rows = cur.fetchall()
-    blk_types = []
-    number_of_model_used_in = []
+    print(sql)
+    '''
+    blk_types = {}
+    
+    for table_name in tables: 
+        sql = "select BLK_TYPE b1,count(*)  as c1 from "+table_name+"_Blocks where substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ") group by BLK_TYPE"
+        cur.execute(sql)
+        rows = cur.fetchall()
+        for i in range(len(rows)):
+            block_type_row =rows[i][0]
+            number_of_models_for_block_type = rows[i][1]
+            if  block_type_row not in blk_types:
+                blk_types[block_type_row] = number_of_models_for_block_type
+            blk_types[block_type_row] += number_of_models_for_block_type
 
-    tables = ["github", "matc", "tutorial", "sourceforge", "others"]
+    print("SCR BLOCK TYPES : ",len(blk_types.keys()))
+    
+
+    '''
     subsys_sql = "select "
     for t in tables:
         subsys_sql += "(select count(*) from " + t + "_models where is_lib =0 and is_test = -1 and Agg_SubSystem_count>0 " \
                                                      "and  substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + "))"
         if t != "others":
             subsys_sql += "+"
-    #print(subsys_sql)
-    cur.execute(subsys_sql)
-    subsys_rows = cur.fetchall()
+    '''
+    blk_types['SubSystem'] = 0 
+    for t in tables:
+        subsys_sql = "select count(*) from " + t + "_models where is_lib =0 and is_test = -1 and Agg_SubSystem_count>0 " \
+                                                     "and  substr(Model_Name,0,length(Model_name)-3) IN (" + mdl_names + ")"
 
- 
-    slc2_blk_mdlcnt = {}
+        #print(subsys_sql)
+        cur.execute(subsys_sql)
+        subsys_rows = cur.fetchall()
+        blk_types['SubSystem'] += subsys_rows[0][0]
+
+    # DEBUG
+    #for k,v in blk_types.items():
+    #    print(k,v)
+    #print(len(blk_types.keys()))
+
+    blk_types_and_mdl_cnt = sorted(blk_types.items(), key = lambda x:x[1], reverse=True)
+
     non_lib_models = 1117
+    blk_types_lst = []
+    mdl_ratio_lst = []
+    blk_types_ratio_dict = {}
+    for ele in blk_types_and_mdl_cnt:
+        b_type,m_cnt = ele
+        blk_types_lst.append(b_type)
+        mdl_ratio_lst.append(m_cnt/non_lib_models*100)
+
+        blk_types_ratio_dict[b_type] = m_cnt/non_lib_models*100
+
+    #print(blk_types_lst)
+    #print(mdl_ratio_lst)
+    '''
+    slc2_blk_mdlcnt = {}
+    
 
     for i in range(32):
         if rows[i][0] == 'SubSystem':
@@ -150,7 +212,8 @@ def get_frequentlyusedBlocks_slc2(conn, mdl_names):
             blk_types.append(rows[i][0])
             number_of_model_used_in.append(rows[i][1]/non_lib_models*100)
             slc2_blk_mdlcnt[rows[i][0]] = rows[i][1]/non_lib_models*100
-    return blk_types, number_of_model_used_in, slc2_blk_mdlcnt
+    '''
+    return blk_types_lst, mdl_ratio_lst, blk_types_ratio_dict
 
 def plot_combined_blk_type(x,y1,y2,xlabel=None, ylabel=None,figurename = None,xtickRot=None,abbr=None,firstmarker='o',secondmarker='x'):
     ax = plt.subplot()
@@ -191,41 +254,47 @@ def main():
 
     slc2_conn = create_connection(slc2_database)
     slc2_blk_type, slc2_model_ratio, slc2_blk_mdlratio = get_slc2_blk_mdl_cnt(slc2_conn)
-    
+    #for i in range(len(slc2_blk_type)):
+    #    print(i,slc2_blk_type[i],slc2_model_ratio[i],slc2_blk_mdlratio[slc2_blk_type[i]])
 
-    #GET model ratio based on top 25 frequently used in slc2 models
-    slnet_mdl_cnt_lst = []
 
+    ### GET model ratio based on top 25 frequently used in slc2 models
+    slnet_mdl_ratio_order_by_slc2 = []
 
     for i in range(25):
-        slnet_mdl_cnt_lst.append(slnet_blk_mdlratio[slc2_blk_type[i]])
-    slc2_model_ratio = slc2_model_ratio[:25]
+        slnet_mdl_ratio_order_by_slc2.append(slnet_blk_mdlratio[slc2_blk_type[i]])
+    slc2_model_ratio_to_plot = slc2_model_ratio[:25]
 
-    name_abbr = {"DataTypeConversion": "DT-Conv", "ToWorkspace": "ToW",
-             "MultiPortSwitch": "MultiPort","DiscretePulseGenerator":"DiscGen","ManualSwitch":"ManSwitch"}
-    slc2_blk_type = abbreviate_names(slc2_blk_type,name_abbr)
-    slc2_blk_type = slc2_blk_type[:25]
+    name_abbr = {"DataTypeConversion": "DT-Conv", "ToWorkspace": "ToW","SimscapeMultibodyBlock": "SimMulti"
+             }
 
-    plot_combined_blk_type(slc2_blk_type,slc2_model_ratio, slnet_mdl_cnt_lst, ylabel="Model Ratio", figurename="combined_most_freq_blks.pdf",xtickRot=90,abbr = name_abbr)
+    #"MultiPortSwitch": "MultiPort","ManualSwitch":"ManSwitch","DiscretePulseGenerator":"DiscGen"
+    slc2_blk_type_to_plot = abbreviate_names(slc2_blk_type,name_abbr)
+    slc2_blk_type_to_plot = slc2_blk_type_to_plot[:25]
+
+    plot_combined_blk_type(slc2_blk_type_to_plot,slc2_model_ratio_to_plot, slnet_mdl_ratio_order_by_slc2, ylabel="Model Ratio", figurename="combined_most_freq_blks.pdf",xtickRot=90,abbr = name_abbr)
    
-    #GET model ratio of slc2 based on top 25 frequently used in slnet models
-    slc2_mdl_cnt_lst = []
 
+
+    ### GET model ratio of slc2 based on top 25 frequently used in slnet models
+    slc2_mdl_ratio_order_by_slnet = []
 
     for i in range(25):
         if slnet_blk_type[i] in slc2_blk_mdlratio:
-            slc2_mdl_cnt_lst.append(slc2_blk_mdlratio[slnet_blk_type[i]])
+            slc2_mdl_ratio_order_by_slnet.append(slc2_blk_mdlratio[slnet_blk_type[i]])
         else:
-            slc2_mdl_cnt_lst.append(0)
-    slnet_model_ratio = slnet_model_ratio[:25]
+            slc2_mdl_ratio_order_by_slnet.append(0)
+    slnet_model_ratio_to_plot = slnet_model_ratio[:25]
  
-    name_abbr = {"DataTypeConversion": "DT-Conv", "PMComponent": "PMComp", "ToWorkspace": "ToW",
-                 "RelationalOperator": "RelOp"}
+    name_abbr = {"DataTypeConversion": "DT-Conv", "PMComponent": "PMComp", "ToWorkspace": "ToW"}#,"RelationalOperator": "RelOp"
     
-    slnet_blk_type = abbreviate_names(slnet_blk_type,name_abbr)
-    slnet_blk_type = slnet_blk_type[:25]
+    slnet_blk_type_to_plot = abbreviate_names(slnet_blk_type,name_abbr)
+    slnet_blk_type_to_plot = slnet_blk_type_to_plot[:25]
 
-    plot_combined_blk_type(slnet_blk_type,slnet_model_ratio, slc2_mdl_cnt_lst, ylabel="Model Ratio", figurename="combined_most_freq_blks_slnetmfub.pdf",xtickRot=90,abbr = name_abbr,firstmarker='x',secondmarker='o')
+    for i in range(25):
+        print(slnet_blk_type_to_plot[i],slnet_model_ratio_to_plot[i], slc2_mdl_ratio_order_by_slnet[i])
+
+    plot_combined_blk_type(slnet_blk_type_to_plot,slnet_model_ratio_to_plot, slc2_mdl_ratio_order_by_slnet, ylabel="Model Ratio", figurename="combined_most_freq_blks_slnetmfub.pdf",xtickRot=90,abbr = name_abbr,firstmarker='x',secondmarker='o')
 
     
 

@@ -51,7 +51,7 @@ def get_most_domain_counts(conn):
             category_cnt[category] += 1
     val = sorted(category_cnt, key = category_cnt.get,reverse=True)
 
-def get_frequentlyusedBlocks(conn):
+def get_frequentlyusedBlocks_deprecated(conn):
     cur = conn.cursor()
     sql = "Select b1,c1+c2 num_of_models from " \
       "(select BLK_TYPE b1,count(*)  as c1 from GitHub_Blocks group by BLK_TYPE) " \
@@ -386,7 +386,7 @@ def main():
 
     plot(domains,projects_per_domain, ylabel="Number of Projects", figurename="domain_in_slnet.pdf",xtickRot=45)
 	
-    most_freq_blks,no_of_model = get_frequentlyusedBlocks(conn)
+    most_freq_blks,no_of_model = get_frequentlyusedBlocks_deprecated(conn) # has errors dont use this
     name_abbr = {"DataTypeConversion": "DT-Conv", "PMComponent": "PMComp", "ToWorkspace": "ToW",
                  "RelationalOperator": "RelOp"}
     
