@@ -1957,8 +1957,8 @@ classdef model_metric < handle
             other = data(:,4);
             other = other(~cellfun('isempty',other));
             other =  cellfun(@(x)string(strrep(x,"'","")),other);
-            original_study_mdl_name_cell = [simple;advanced;other;tutorial];
-            %original_study_mdl_name_cell = [advanced;other;tutorial]
+            %original_study_mdl_name_cell = [simple;advanced;other;tutorial];
+            original_study_mdl_name_cell = [advanced;other;tutorial]
             [r,c] = size(original_study_mdl_name_cell);
             original_study_mdl_name = "";
             for k = 1:r-1
