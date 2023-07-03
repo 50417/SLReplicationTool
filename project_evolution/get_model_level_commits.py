@@ -11,7 +11,7 @@ def get_model_level_commits(file_path, repo,hash,model_verbatim,model_file,id):
     no_of_commits = 0
     authors_set = set()
     commits_date = []
-    for commits in RepositoryMining(repo, filepath=model_file,to_commit=hash).traverse_commits():
+    for commits in RepositoryMining(repo, filepath=file_path,to_commit=hash).traverse_commits():
         model_verbatim.insert(id, model_file, commits)
         no_of_commits += 1
         authors_set.add(commits.author.email)
