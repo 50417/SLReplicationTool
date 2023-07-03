@@ -74,7 +74,7 @@ SLC_R = sqlite extracted using R2017A
 ````
 	> python get_SLNET_plot.py
 ````
-## Insight on SLNET Project evolution and Code generating models
+## Insight on SLNET/SLC_20 Project evolution and SLNET/SLC_20/SLC_R Code generating models
 - Navigate to [Data Analysis]
 - Set up python environment based on README fie
 - Update SLNET_analysis_data database location downloaded from [FigShare] in analyzeProjects.py
@@ -82,7 +82,7 @@ SLC_R = sqlite extracted using R2017A
 	> python analyzeProjects.py
 ````
 
-To get the plots for SLNET project and model lifecycle 
+To get the plots for SLNET/SLC_20 project and model lifecycle 
 - Update SLNET_analysis_data database location downloaded from [FigShare] in analyze_lifecycle.py
 ````
 	> python analyze_lifecycle.py
