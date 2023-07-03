@@ -56,7 +56,7 @@ Note that the commits extracted are upto the time when [SLNET] are packaged. To 
 Refer to [Replication.md] to reproduce the numbers reported in the paper.
 
 #### 3. Data Analysis
-The script is used to reproduce some of the numbers reported in the paper. Refer to [Replication.md] to reproduce the numebrs reported in the paper.
+The script is used to reproduce some of the numbers reported in the paper. Refer to [Replication.md] to reproduce the numbers reported in the paper.
 
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
