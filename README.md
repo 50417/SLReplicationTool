@@ -58,15 +58,15 @@ The script is used to reproduce some of the numbers reported in the paper. Refer
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
    [Anaconda]: <https://www.anaconda.com/distribution/>
    [SLNET]: <https://zenodo.org/record/4898432#.Y-utZ9LMIYs>
-   [Replication.md]: <https://github.com/Anonymous-double-blind/SLReplicationTool/blob/main/replication.md>
+   [Replication.md]: <https://github.com/50417/SLReplicationTool/blob/main/replication.md>
    [SLNET-Metrics]: <https://github.com/50417/SLNET_Metrics>
-   [SLNET-Metrics-Extended]: <https://github.com/Anonymous-double-blind/SLReplicationTool/tree/main/SLNET_Metrics-Extended>
-   [Project Evolution]: <https://github.com/Anonymous-double-blind/SLReplicationTool/tree/main/project_evolution> 
-   [Data Analysis]: <https://github.com/Anonymous-double-blind/SLReplicationTool/tree/main/analyze_data>
+   [SLNET-Metrics-Extended]: <https://github.com/50417/SLReplicationTool/tree/main/SLNET_Metrics-Extended>
+   [Project Evolution]: <https://github.com/50417/SLReplicationTool/tree/main/project_evolution> 
+   [Data Analysis]: <https://github.com/50417/SLReplicationTool/tree/main/analyze_data>
    [SLNET-Miner]: <https://github.com/50417/SLNet_Miner>
    [SLNET-Miner-archive]: <https://zenodo.org/record/6336034#.Y-VIZdLMIYs>
    [A Curated Corpus of Simulink Models from Model-Based Empirical Studies]: <https://ieeexplore.ieee.org/document/8445079>
    [Characteristics, potentials, and limitations of open-source Simulink projects for empirical research]: <https://link.springer.com/article/10.1007/s10270-021-00883-0>
    [SLNET: A Redistributable Corpus of 3rd-party Simulink Models]: <https://dl.acm.org/doi/abs/10.1145/3524842.3528001>
-   [MATLAB Installation]: <https://github.com/Anonymous-double-blind/SLReplicationTool/blob/main/MatlabInstallation.md>
+   [MATLAB Installation]: <https://github.com/50417/SLReplicationTool/blob/main/MatlabInstallation.md>
    [Analysis Data]: <https://figshare.com/s/97cbb9e2585b84553c83>
