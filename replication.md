@@ -125,8 +125,8 @@ FILE_ID IN (5,7,15,22,32,38,41,58,65,66,79,87,95,102,105,106,118,123,125,126,133
    [A Curated Corpus of Simulink Models from Model-Based Empirical Studies]: <https://ieeexplore.ieee.org/document/8445079>
    [Characteristics, potentials, and limitations of open-source Simulink projects for empirical research]: <https://link.springer.com/article/10.1007/s10270-021-00883-0>
    [SLNET: A Redistributable Corpus of 3rd-party Simulink Models]: <https://dl.acm.org/doi/abs/10.1145/3524842.3528001>
-   [Simulink Installation]: <https://github.com/Anonymous-double-blind/SimReplicationTool/wiki/Simulink-Model-Version>
+   [Simulink Installation]: <https://github.com/50417/SimReplicationTool/wiki/Simulink-Model-Version>
    [SLNET]: <https://zenodo.org/record/4898432#.Y-utZ9LMIYs>
-   [Data Analysis]: <https://github.com/Anonymous-double-blind/SimReplicationTool/tree/main/analyze_data>
-   [MATLAB Installation]: <https://github.com/Anonymous-double-blind/SLReplicationTool/blob/main/MatlabInstallation.md>
+   [Data Analysis]: <https://github.com/50417/SimReplicationTool/tree/main/analyze_data>
+   [MATLAB Installation]: <https://github.com/50417/SLReplicationTool/blob/main/MatlabInstallation.md>
    [FigShare]: <https://figshare.com/s/97cbb9e2585b84553c83>
