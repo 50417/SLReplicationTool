@@ -5,6 +5,7 @@ This wiki contains information about reproducing the numbers and plots reported 
 3. [SLNET: A Redistributable Corpus of 3rd-party Simulink Models] (SLNET)
 
 The analysis data can be downloaded from [FigShare]. We were able to reproduce the numbers from [SLNET]
+In the paper, SC=SLC and SLC_20=SC_20
 
 ## Model Metrics Replication
 To replicate model metrics of SLC_R, SLC_20R and SLNET. 
