@@ -4,7 +4,11 @@ This work replicates various findings related to Simulink models and modeling pr
 2. [Characteristics, potentials, and limitations of open-source Simulink projects for empirical research]
 3. [SLNET: A Redistributable Corpus of 3rd-party Simulink Models]
 
+## Recent News
 
+"Replicability Study: Corpora For Understanding Simulink Models & Projects" is accepted at [ESEM 2023](https://conf.researchr.org/track/esem-2023/esem-2023-technical-track) (CORE A, Acceptance rate: 29%)
+
+--------------------------------------------------------------
 We have different tools in the repository that work with each other:
 1. [Project Evolution]
 2. [SLNET-Metrics-Extended]
