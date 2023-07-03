@@ -56,7 +56,7 @@ The script is used to reproduce some of the numbers reported in the paper. Refer
 
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-   [Anaconda]: <https://www.anaconda.com/distribution/>
+   [Anaconda]: <https://www.anaconda.com/>
    [SLNET]: <https://zenodo.org/record/4898432#.Y-utZ9LMIYs>
    [Replication.md]: <https://github.com/50417/SLReplicationTool/blob/main/replication.md>
    [SLNET-Metrics]: <https://github.com/50417/SLNET_Metrics>
